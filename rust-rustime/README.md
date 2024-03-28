@@ -2,7 +2,7 @@
 
 <div align="center">
 
-### Measure time of command line like `time`
+### Measure time like `time`
 
 </div>
 
