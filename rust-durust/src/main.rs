@@ -1,17 +1,49 @@
 use std::path::Path;
+use std::time::Instant;
 use std::{env, fs};
 use walkdir::WalkDir;
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
+fn human_readable_size(size: u64) -> String {
+    const KB: f64 = 1024.0;
+    const MB: f64 = KB * 1024.0;
+    const GB: f64 = MB * 1024.0;
+    const TB: f64 = GB * 1024.0;
 
+    if size < (KB as u64) {
+        format!("{} B", size)
+    } else if size < (MB as u64) {
+        format!("{:.2} KB", size as f64 / KB)
+    } else if size < (GB as u64) {
+        format!("{:.2} MB", size as f64 / MB)
+    } else if size < (TB as u64) {
+        format!("{:.2} GB", size as f64 / GB)
+    } else {
+        format!("{:.2} TB", size as f64 / TB)
+    }
+}
+
+fn calculate_directory_size(path: &Path) -> u64 {
+    let mut total_size: u64 = 0;
+
+    for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
+        if entry.file_type().is_file() {
+            total_size += entry.metadata().unwrap().len();
+        }
+    }
+
+    total_size
+}
+
+
+fn main() {
+    let now = Instant::now();
+    let args: Vec<String> = env::args().collect();
     if args.len() < 4 {
-        println!("Usage: {} <directory> <max-depth> -d/-f", args[0]);
+        println!("Usage: durust <directory> <max-depth> -d/-f");
         return;
     }
 
     let root = &args[1];
-
     let opt = &args[3];
 
     if !Path::new(root).exists() {
@@ -20,9 +52,7 @@ fn main() {
     }
 
     let max_depth: usize = args[2].parse().unwrap_or(usize::MAX);
-
     let mut dir_sizes: Vec<(String, u64)> = Vec::new();
-
     let walker = WalkDir::new(root).max_depth(max_depth).into_iter();
 
     match opt.as_str() {
@@ -58,35 +88,8 @@ fn main() {
     for (dir_path, size) in dir_sizes {
         println!("{} | {}", human_readable_size(size), dir_path);
     }
+
+    let elapsed = now.elapsed();
+    println!("took: {:.2?}", elapsed);
 }
 
-fn calculate_directory_size(path: &Path) -> u64 {
-    let mut total_size: u64 = 0;
-
-    for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
-        if entry.file_type().is_file() {
-            total_size += entry.metadata().unwrap().len();
-        }
-    }
-
-    total_size
-}
-
-fn human_readable_size(size: u64) -> String {
-    const KB: f64 = 1024.0;
-    const MB: f64 = KB * 1024.0;
-    const GB: f64 = MB * 1024.0;
-    const TB: f64 = GB * 1024.0;
-
-    if size < (KB as u64) {
-        format!("{} B", size)
-    } else if size < (MB as u64) {
-        format!("{:.2} KB", size as f64 / KB)
-    } else if size < (GB as u64) {
-        format!("{:.2} MB", size as f64 / MB)
-    } else if size < (TB as u64) {
-        format!("{:.2} GB", size as f64 / GB)
-    } else {
-        format!("{:.2} TB", size as f64 / TB)
-    }
-}
