@@ -1,15 +1,15 @@
-# rust-dizxr
+# durust
 
 <div align="center">
 
-### Rust directory and file size like `du -h -d 1`
+### Calculate directory and file sizes, with Rust like `du -h -d 1`
 
 </div>
 
 ## Usage
 
 ```sh
-dizxr <directory> <max-depth> -d/-f 
+durust <directory> <max-depth> -d/-f 
 ```
 
 ## License
